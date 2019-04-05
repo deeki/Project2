@@ -1,2 +1,2 @@
 # Project2
-A webpage with search ans sort functionlaity using javascript
+A webpage with search and sort functionlaity using javascript
