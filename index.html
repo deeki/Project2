@@ -1,0 +1,269 @@
+<!-- 
+    Name : Deeksha Gupta 
+    Functionality Implemented
+        1. List of book by its genre type whose mime_type is only image
+        2. Search particular book in particular genre 
+        3. Loading more book on scolling
+        4. Alert message when the book version is not available
+        5. Opening book in new tab with html, txt, pdf file.
+        6. Desiging UI.
+ -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gutenberg</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <section>
+        <div class="text_center">
+            <div class="heading">
+                <div>Gutenberg</div>
+                <span>Project</span>
+            </div>
+            <div class="gene_option">
+                <ul class="list_style" id="gene">
+                    <li id="fiction" class="list">Fiction <span>&rarr;</span></li>
+                    <li id="drama" class="list">Drama <span>&rarr;</span></li>
+                    <li id="humor" class="list">Humor <span>&rarr;</span></li>
+                    <li id="politics" class="list">Politics <span>&rarr;</span></li>
+                    <li id="philosopy" class="list">Philosopy <span>&rarr;</span></li>
+                    <li id="history" class="list">History <span>&rarr;</span></li>
+                    <li id="adventure" class="list">Adventure <span>&rarr;</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+    <div>
+        <div id="myNav" class="overlay">
+            <!-- Button to close the overlay navigation -->
+            <a href="javascript:void(0)" class="closebtn" onclick="Gutenberg.closeNav()">&times;</a>
+            <!-- Filter Options -->
+            <div class="search">
+                <input type="text" id="search" placeholder="Search Text">
+            </div>
+            <!-- Overlay content -->
+            <div class="overlay-content"></div>
+        </div>
+        <!-- Use any element to open/show the overlay navigation menu -->
+    </div>
+</body>
+</html>
+<script>
+var Gutenberg = {
+    // function for opening overlay
+    openNav : function() {
+        $("#myNav").css('width',"100%");
+    },
+    // function for closing overlay
+    closeNav : function() {
+        $("#myNav").css('width',"0%");
+    },
+
+    // function to display list of books in overlay
+    displayData : function (url, modify, update) {
+        $.getJSON(url, function( data ) {
+            var response    = data.results,      
+                items       = [], formats, txt, booklink;
+            $.each( response, function( key, val ) {
+                txt = response[key]['formats'];
+                booklink = [txt['text/html; charset=utf-8'], txt['application/pdf'], txt['text/plain; charset=utf-8']];
+                if (booklink[0] != undefined) {
+                    formats = booklink[0];
+                }   else if (booklink[1] != undefined) {
+                    formats = booklink[1];
+                }  else if (booklink[2] != undefined) {
+                    formats = booklink[2];
+                }
+
+                if (formats == undefined) {
+                    formats = "javascript:void(0)";
+                }
+                if (response[key].authors.length > 0) {
+                    items.push( "<li class='booklink' style='float:left;width: 250px;height: 312px;' id='" + response[key].id + "'><a href="+formats+" target='_blank' ><div><img style='width: 205px;height: 260px;' src="+response[key].formats['image/jpeg']+"></div><div><b>"+  response[key].title +"</b><br/>Author: "+response[key].authors[0].name+"</div></a></li>" );
+                }
+            });
+            if (modify) {
+                $(".my-new-list").append(items.join( "" ));
+            }
+            else if (update) {
+                if (update != '') {
+                    $(".my-new-list").empty();
+                    $(".my-new-list").append(items.join( "" ));
+                } else {
+                    $(".my-new-list").append(items.join( "" ));
+                }
+            } 
+            else {
+                $(".overlay-content").empty();
+                Gutenberg.openNav();
+                $( "<ul/>", {
+                    "class": "my-new-list list_style",
+                    html: items.join( "" )
+                }).appendTo( ".overlay-content" );
+            }
+
+        });
+    }
+}
+/**
+Alert message will be display when the book doesnt contains the proper url;
+**/
+$("body").on('click', '.booklink', function() {
+    var id = $(this).attr('id');
+    if ($("#"+id).children('a').attr('href') == 'javascript:void(0)') {
+        alert("No viewable version available");
+    }
+});
+/**
+load the book of particular type
+**/
+$(".list").on('click', function() {
+    var type = $(this).attr("id");
+    var url = "http://skunkworks.ignitesol.com:8000/books/?topic="+type+"&mime_type=image";
+    Gutenberg.displayData(url, false, false);
+});
+/**
+Load book on scrolling the page
+**/
+var next = 1;
+$("#myNav").on("scroll", function() {
+    next++;
+    if($("#myNav").scrollTop() >= ($(document).height()- $("#myNav").innerHeight())){
+        var url = "http://skunkworks.ignitesol.com:8000/books/?mime_type=image&page="+next+"&topic=fiction";
+        Gutenberg.displayData(url, true, false);
+    }
+});
+/**
+Search book on while typing text in input box and hitting enter.
+**/
+$("input").keypress(function(){
+    var val = encodeURI($(this).val()),
+        url = "http://skunkworks.ignitesol.com:8000/books/?mime_type=image&search="+val+"&topic=fiction";
+    Gutenberg.displayData(url, false, true);
+});
+</script>
+<style>
+section {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background-color: #5e57e7;
+    color: #fff;
+    font-family: cursive;
+    overflow: hidden;
+}
+.heading {
+    margin: 40px 0;
+    line-height: 35px;
+}
+.heading div {
+    font-size:45px;
+}
+.heading span {
+    font-size:25px;
+}
+.list_style {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color:#fff;
+}
+.text_center {
+    text-align:center;
+}
+.gene_option {
+    position: absolute;
+    left: 39%;
+}
+.gene_option ul {
+    width: 350px;
+    font-size: 25px;
+    text-transform: uppercase;
+}
+.gene_option ul li {
+    cursor:pointer;
+    text-align: left;
+    padding: 10px;
+    background: #3851a8;
+    margin-bottom: 15px;
+    box-shadow: 2px 2px 4px #3851a8;
+}
+.gene_option ul li span { 
+    float:right;
+}
+/*Overlay Design*/
+.overlay {
+    /* Height & width depends on how you want to reveal the overlay (see JS below) */    
+    height: 100%;
+    width: 0;
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    background-color: rgb(0,0,0); /* Black fallback color */
+    background-color: rgba(0,0,0, 0.9); /* Black w/opacity */
+    overflow-x: hidden; /* Disable horizontal scroll */
+    transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
+}
+
+/* Position the content inside the overlay */
+.overlay-content {
+    font-family: cursive;
+    position: relative;
+    top: 5%; /* 25% from the top */
+    width: 100%; /* 100% width */
+    margin-top: 30px; /* 30px top margin to avoid conflict with the close button on smaller screens */
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+/* The navigation links inside the overlay */
+.overlay a {
+    padding: 8px;
+    text-decoration: none;
+    /*font-size: 36px;*/
+    color: #818181;
+    display: block; /* Display block instead of inline */
+    transition: 0.3s; /* Transition effects on hover (color) */
+}
+
+/* When you mouse over the navigation links, change their color */
+.overlay a:hover, .overlay a:focus {
+    color: #f1f1f1;
+}
+
+/* Position the close button (top right corner) */
+.overlay .closebtn {
+    position: absolute;
+    top: 20px;
+    right: 45px;
+    font-size: 60px;
+}
+.overlay-content ul li {
+    line-height: 20px;
+    margin-bottom: 20px;
+}
+/* When the height of the screen is less than 450 pixels, change the font-size of the links and position the close button again, so they don't overlap */
+@media screen and (max-height: 450px) {
+    /*.overlay a {font-size: 20px}*/
+    .overlay .closebtn {
+        font-size: 40px;
+        top: 15px;
+        right: 35px;
+    }
+}
+.search {
+    font-size: 40px;
+    top: 17px; 
+    left: 15px; 
+    position: relative;
+}
+.search input {
+    padding: 10px 100px 10px 16px; 
+    outline: none; 
+    border-radius: 5px;
+}
+</style>
